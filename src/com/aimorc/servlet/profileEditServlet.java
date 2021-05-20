@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.sql.SQLException;
 import java.util.Map;
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -16,6 +17,7 @@ import org.json.simple.parser.JSONParser;
 import com.aimorc.postgreSQL.PostgressDBOperations;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+@WebServlet("/profileEditServlet")
 public class profileEditServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 

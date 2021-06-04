@@ -2,7 +2,16 @@ package com.aimorc.servlet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.spec.InvalidKeySpecException;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Properties;
+import java.util.Random;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 import javax.mail.Authenticator;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -18,6 +27,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+
+
+
 import com.aimorc.postgreSQL.PostgressDBOperations;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -25,6 +37,8 @@ import com.sun.net.httpserver.HttpExchange;
 public class registrationServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 
+	
+	 
 	public registrationServlet() {
 		super();
 	}
@@ -34,6 +48,11 @@ public class registrationServlet extends HttpServlet {
            response.getWriter().write("Welcome to DoGet of Registration Servlet");
 
 	}
+    
+    
+    
+
+
     @Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
@@ -47,16 +66,19 @@ public class registrationServlet extends HttpServlet {
 			Object paresedJSONObject = new JSONParser().parse(jsonString);
 			JSONObject jsonObject = (JSONObject) paresedJSONObject;
             String username = (String) jsonObject.get("username");
-			String parsedpassword = (String) jsonObject.get("password");
+            String  parsedpassword = (String) jsonObject.get("password");
+            String encryptedpassword =getEncodedString(parsedpassword);
+            System.out.println("encryptedpassword = " + encryptedpassword);
+	
 		   PostgressDBOperations operations = new PostgressDBOperations();
 			String statusMessage = "";
-                if (operations.validateAccountWithUsernamePassword(username, parsedpassword)) {
+               if (operations.validateAccountWithUsernamePassword(username, encryptedpassword)) {
 				 response.sendError(409, "Resource already exists");
 					 System.out.println("  User already Exists");
 					 }
 			
 		else {
-				operations.loginUserAccount(jsonObject);
+				operations.loginUserAccount(jsonObject,encryptedpassword);
 				 operations.registerUserAccount(jsonObject);
 				 statusMessage = "User Succecssfully registered!";
 				 String message = "Welcome from AIMORC Innovations, You are Successfully registered for our Portal. Thank you!";
@@ -66,8 +88,9 @@ public class registrationServlet extends HttpServlet {
 				response.getWriter().write(statusMessage);
 				 response.setStatus(200);
 				 System.out.println("  User Succecssfully registered!");
-			}
-			 } catch (Exception e) {
+			
+		}
+               } catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
@@ -113,4 +136,10 @@ public class registrationServlet extends HttpServlet {
 	e.printStackTrace();
 		}
 }
+    public static String getEncodedString(String password)
+    {
+    String encrytedpassword = Base64.getEncoder().encodeToString(password.getBytes());
+    //System.out.println("encrytedpassword");
+    return encrytedpassword;
+    }  
 }

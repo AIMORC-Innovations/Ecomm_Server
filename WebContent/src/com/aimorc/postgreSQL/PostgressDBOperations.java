@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,9 @@ public class PostgressDBOperations {
 	ResultSet resultSet = null;
 	int userid = 0;
 	int x;
-	//<!--------------------- ----------------closing resources------------------------------ -->
+
+	// <!--------------------- ----------------closing
+	// resources------------------------------ -->
 	public void closeDb() {
 		System.out.println("Inside Close DB");
 
@@ -34,23 +38,40 @@ public class PostgressDBOperations {
 				preparedStatement.close();
 			}
 
-			if (null != connection) { 
+			if (null != connection) {
 				connection.close();
 			}
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
 		}
 	}
-	// <!--------------------- ----------------user and password validation check------------------------------ -->
-	public boolean validateAccountWithUsernamePassword(String parsedusername, String parsedpassword)
+
+	// <!--------------------- ----------------user and password validation
+	// check------------------------------ -->
+	public boolean validateAccountWithUsernamePassword(String username, String encryptedpassword)
 			throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
+			
+
+			/*
+			 * String encryptedpassword = PasswordUtils2.getEncodedString(password);
+			 * System.out.println("encryptedpassword = " + encryptedpassword);
+			 * 
+			 * 
+			 * String decytpassword = PasswordUtils2.getDecodedString(encryptedpassword);
+			 * System.out.println("decytpassword = " + decytpassword);
+			 */
+
 			preparedStatement = connection.prepareStatement("select * from login where username = ? and password = ?");
-			preparedStatement.setString(1, parsedusername);
-			preparedStatement.setString(2, parsedpassword);
+			preparedStatement.setString(1, username);
+			preparedStatement.setString(2, encryptedpassword);
+
 			resultSet = preparedStatement.executeQuery();
-			System.out.print("username " + parsedusername);
+			System.out.print("username " + username);
+
+			System.out.print("password " + encryptedpassword);
+
 			while (resultSet.next()) {
 				return true;
 			}
@@ -63,40 +84,39 @@ public class PostgressDBOperations {
 		return false;
 	}
 
-	//<!--------------------- ----------------display date---------------------------------------- -->
+	// <!--------------------- ----------------display
+	// date---------------------------------------- -->
 
 	@SuppressWarnings("null")
 	public Map fetchdate(String username) throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(username);
-			preparedStatement = connection.prepareStatement(
-					"select date from date where userid=?");
+			preparedStatement = connection.prepareStatement("select date from date where userid=?");
 			preparedStatement.setInt(1, userid);
 			resultSet = preparedStatement.executeQuery();
 
 			while (resultSet.next()) {
 				String date = resultSet.getString(1);
-				Object objdate = date ;
+				Object objdate = date;
 				Map<Object, Object> individualdate = new HashMap<Object, Object>();
-				individualdate .put("date", objdate);
+				individualdate.put("date", objdate);
 				System.out.println("The date is: " + individualdate);
 				return individualdate;
 			}
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 
 			closeDb();
 		}
 		return null;// fail
 	}
 
-	//<!--------------------- ----------------update date------------------------------ -->
+	// <!--------------------- ----------------update
+	// date------------------------------ -->
 	@SuppressWarnings("null")
-	public int updatedatetime(String date, String username)
-			throws ClassNotFoundException, SQLException {
+	public int updatedatetime(String date, String username) throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(username);
@@ -111,18 +131,17 @@ public class PostgressDBOperations {
 			return preparedStatement.executeUpdate();
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
-		return -1; 
+		return -1;
 	}
 
-	// <!--------------------- ----------------update user profile------------------------------ -->
+	// <!--------------------- ----------------update user
+	// profile------------------------------ -->
 	@SuppressWarnings("null")
-	public int updateUserProfile(String parsedfirstname, String parsedlastname, String parseddob,
-			String parsedaddress, String parsedphonenum, String parsedgender, String username)
-					throws ClassNotFoundException, SQLException {
+	public int updateUserProfile(String parsedfirstname, String parsedlastname, String parseddob, String parsedaddress,
+			String parsedphonenum, String parsedgender, String username) throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(username);
@@ -143,14 +162,14 @@ public class PostgressDBOperations {
 			return preparedStatement.executeUpdate();
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
-		return -1; 
+		return -1;
 	}
 
-	// <!--------------------- ----------------forgot password login security question------------------------------ -->
+	// <!--------------------- ----------------forgot password login security
+	// question------------------------------ -->
 	@SuppressWarnings("null")
 	public boolean forgotpassword(String sessionusername, int parsedsecurity_id, String parsedsecurityAnswer)
 			throws ClassNotFoundException, SQLException {
@@ -170,15 +189,16 @@ public class PostgressDBOperations {
 			}
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
-		return false; 
+		return false;
 	}
 
-	//<!--------------------- ----------------home page category display-------------------------------->
-	public Map<Object, Map<Object, Object>> CategoryPageDisplay(int category_id)throws ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------home page category
+	// display-------------------------------->
+	public Map<Object, Map<Object, Object>> CategoryPageDisplay(int category_id)
+			throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			String query = " select p.product_id, p.product_name , p.product_description , p.product_price, c.category_name, c.category_id from \r\n"
@@ -191,20 +211,20 @@ public class PostgressDBOperations {
 				String productId = Integer.toString(resultSet.getInt(1));
 				Object objId = productId;
 				String productName = resultSet.getString(2);
-				Object objName = productName ;
+				Object objName = productName;
 				String productDescription = resultSet.getString(3);
 				Object objDes = productDescription;
 				float productPrice = resultSet.getFloat(4);
 				Object objPrice = productPrice;
 				String category_name = resultSet.getString(5);
-				Object objCategory_Name = category_name ;
+				Object objCategory_Name = category_name;
 				String categoryid = Integer.toString(resultSet.getInt(6));
-				Object objCategory_id =  categoryid ;
+				Object objCategory_id = categoryid;
 				Map<Object, Object> individualProduct = new HashMap<Object, Object>();
 				individualProduct.put("product_id", objId);
 				individualProduct.put("product_name", objName);
 				individualProduct.put("product_description", objDes);
-				individualProduct.put("product_price", objPrice );
+				individualProduct.put("product_price", objPrice);
 				individualProduct.put("category_name", objCategory_Name);
 				individualProduct.put("category_id", objCategory_id);
 				categoryProducts.put(productId, individualProduct);
@@ -214,16 +234,16 @@ public class PostgressDBOperations {
 			return categoryProducts;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return null;
 	}
 
-
-	//<!--------------------- ----------------home page to view category -------------------------------->
-	public Map<Object, Map<Object, Object>> homeCategory( String sessionusername, int category_id)throws ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------home page to view category
+	// -------------------------------->
+	public Map<Object, Map<Object, Object>> homeCategory(String sessionusername, int category_id)
+			throws ClassNotFoundException, SQLException {
 
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
@@ -237,34 +257,35 @@ public class PostgressDBOperations {
 				String productId = Integer.toString(resultSet.getInt(1));
 				Object objId = productId;
 				String productName = resultSet.getString(2);
-				Object objName = productName ;
+				Object objName = productName;
 				String productDescription = resultSet.getString(3);
 				Object objDes = productDescription;
 				float productPrice = resultSet.getFloat(4);
 				Object objPrice = productPrice;
 				int cateogryid = resultSet.getInt(5);
-				Object  objcid  = cateogryid;
+				Object objcid = cateogryid;
 				Map<Object, Object> individualProduct = new HashMap<Object, Object>();
 				individualProduct.put("product_id", objId);
 				individualProduct.put("product_name", objName);
 				individualProduct.put("product_description", objDes);
-				individualProduct.put("product_price", objPrice );
-				individualProduct.put("cateogry_id", objcid  );
+				individualProduct.put("product_price", objPrice);
+				individualProduct.put("cateogry_id", objcid);
 				categoryProducts.put(productId, individualProduct);
 			}
 			System.out.println("The categoryProducts is: " + categoryProducts);
 			return categoryProducts;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return null;
 	}
 
-	//<!--------------------- ----------------home page category display-------------------------------->
-	public Map<Object, Map<Object, Object>> homeCategoryDisplay( String sessionusername)throws ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------home page category
+	// display-------------------------------->
+	public Map<Object, Map<Object, Object>> homeCategoryDisplay(String sessionusername)
+			throws ClassNotFoundException, SQLException {
 
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
@@ -274,7 +295,7 @@ public class PostgressDBOperations {
 			Map<Object, Map<Object, Object>> entireCatogery = new HashMap<Object, Map<Object, Object>>();
 			while (resultSet.next()) {
 				String categoryId = Integer.toString(resultSet.getInt(1));
-				Object objId = categoryId ;
+				Object objId = categoryId;
 				String categoryName = resultSet.getString(2);
 				Object objName = categoryName;
 				String categoryDescription = resultSet.getString(3);
@@ -289,17 +310,17 @@ public class PostgressDBOperations {
 			return entireCatogery;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return null;
 	}
 
-
-	// <!--------------------- ----------------Retrieve Product information from DB------------------------------ -->
+	// <!--------------------- ----------------Retrieve Product information from
+	// DB------------------------------ -->
 	@SuppressWarnings("null")
-	public Map<Object, Map<Object, Object>> productinformation() throws ClassNotFoundException, ClassCastException, SQLException {
+	public Map<Object, Map<Object, Object>> productinformation()
+			throws ClassNotFoundException, ClassCastException, SQLException {
 
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
@@ -311,7 +332,7 @@ public class PostgressDBOperations {
 				String productId = Integer.toString(resultSet.getInt(1));
 				Object objId = productId;
 				String productName = resultSet.getString(2);
-				Object objName = productName ;
+				Object objName = productName;
 				String productDescription = resultSet.getString(3);
 				Object objDes = productDescription;
 				float productPrice = resultSet.getFloat(4);
@@ -320,21 +341,21 @@ public class PostgressDBOperations {
 				individualProduct.put("product_id", objId);
 				individualProduct.put("product_name", objName);
 				individualProduct.put("product_description", objDes);
-				individualProduct.put("product_price", objPrice );
+				individualProduct.put("product_price", objPrice);
 				registerProducts.put(productId, individualProduct);
 			}
 			System.out.println("The registerProducts is: " + registerProducts);
 			return registerProducts;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return null;
 	}
 
-	// <!--------------------- ----------------update new password in login table------------------------------ -->
+	// <!--------------------- ----------------update new password in login
+	// table------------------------------ -->
 	public int updatepassword(String parsedpassword, String sessionusername)
 			throws ClassNotFoundException, SQLException {
 
@@ -347,14 +368,14 @@ public class PostgressDBOperations {
 			return preparedStatement.executeUpdate();
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return 1;
 	}
 
-	// <!--------------------- ----------------password update with old password check------------------------------ -->
+	// <!--------------------- ----------------password update with old password
+	// check------------------------------ -->
 	public boolean loginPasswordCheck(String parsedoldpassword, String sessionusername)
 			throws ClassNotFoundException, SQLException {
 		try {
@@ -368,14 +389,14 @@ public class PostgressDBOperations {
 			}
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return false;
 	}
 
-	// <!--------------------- ----------------fetch user Id ------------------------------ -->
+	// <!--------------------- ----------------fetch user Id
+	// ------------------------------ -->
 	@SuppressWarnings("null")
 	public int fetchUserId(String sessionusername) throws ClassNotFoundException, SQLException {
 		try {
@@ -389,13 +410,13 @@ public class PostgressDBOperations {
 			return userid;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 		}
 		return 0;
 	}
 
-	// <!--------------------- ----------------update last login time in login table------------------------------ -->
+	// <!--------------------- ----------------update last login time in login
+	// table------------------------------ -->
 	public int updateLastlogin(String parsedusername, String lastlogin) throws ClassNotFoundException, SQLException {
 
 		try {
@@ -407,16 +428,16 @@ public class PostgressDBOperations {
 			return preparedStatement.executeUpdate();
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return 1;
 	}
 
-	//<!--------------------- ----------------For selecting date----------------------------------------- -->
+	// <!--------------------- ----------------For selecting
+	// date----------------------------------------- -->
 	@SuppressWarnings("null")
-	public boolean Datepicker(String date, String sessionusername ) throws ClassNotFoundException, SQLException {
+	public boolean Datepicker(String date, String sessionusername) throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(sessionusername);
@@ -427,16 +448,15 @@ public class PostgressDBOperations {
 			return true;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
-		return false; 
+		return false;
 	}
 
-	// <!--------------------- ----------------register new user----------------------------------------- -->
-	public boolean registerUserAccount(JSONObject jsonObject)
-			throws  ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------register new
+	// user----------------------------------------- -->
+	public boolean registerUserAccount(JSONObject jsonObject) throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			String sessionusername = (String) jsonObject.get("username");
@@ -462,15 +482,18 @@ public class PostgressDBOperations {
 		return false;
 	}
 
-	//<!-------------------------------register new username and password in login table----------------------------------------- -->
-	public boolean loginUserAccount(JSONObject jsonObject) throws  ClassNotFoundException, SQLException {
+	// <!-------------------------------register new username and password in login
+	// table----------------------------------------- -->
+	public boolean loginUserAccount(JSONObject jsonObject, String encryptedPassword)
+			throws ClassNotFoundException, SQLException {
 		try {
 			String lastlogin = (String) jsonObject.get("created_on");
 			connection = JDBCPostgreSQLConnect.getConnection();
 			String query = "insert into login (username, password, lastlogin) values (?, ?, ?)";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setString(1, (String) jsonObject.get("username"));
-			preparedStatement.setString(2, (String) jsonObject.get("password"));
+			preparedStatement.setString(2, encryptedPassword);
+
 			preparedStatement.setString(3, lastlogin);
 			preparedStatement.executeUpdate();
 			return true;
@@ -482,14 +505,15 @@ public class PostgressDBOperations {
 		return false;
 	}
 
-	// <!--------------------- ----------------display user profile----------------------------------------- -->
+	// <!--------------------- ----------------display user
+	// profile----------------------------------------- -->
 	@SuppressWarnings("null")
 	public Map displayProfile(String username) throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
-			preparedStatement = connection.prepareStatement(
-					"select r.firstname, r.lastname, r.dob, r.gender, r.phonenum, r.address" + " from registration r "
-							+ "join login l on l.userid = r.userid where l.username = ?");
+			preparedStatement = connection
+					.prepareStatement("select r.firstname, r.lastname, r.dob, r.gender, r.phonenum, r.address"
+							+ " from registration r " + "join login l on l.userid = r.userid where l.username = ?");
 			preparedStatement.setString(1, username);
 			resultSet = preparedStatement.executeQuery();
 			Map<String, String> individualUser = new HashMap<String, String>();
@@ -510,13 +534,16 @@ public class PostgressDBOperations {
 		return null;
 	}
 
-	// <!--------------------- ----------------Function for Product_order------------------------------ -->
+	// <!--------------------- ----------------Function for
+	// Product_order------------------------------ -->
 	@SuppressWarnings("null")
-	public boolean productOrder(String sessionusername, int parsedproductId, int quantity) throws ClassNotFoundException, SQLException {
+	public boolean productOrder(String sessionusername, int parsedproductId, int quantity)
+			throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(sessionusername);
-			preparedStatement = connection.prepareStatement("insert into orders(product_id ,userid, quantity) values(?, ?, ?)");
+			preparedStatement = connection
+					.prepareStatement("insert into orders(product_id ,userid, quantity) values(?, ?, ?)");
 			preparedStatement.setInt(1, parsedproductId);
 			preparedStatement.setInt(2, userid);
 			preparedStatement.setInt(3, quantity);
@@ -524,28 +551,26 @@ public class PostgressDBOperations {
 			return true;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
-		return false; 
+		return false;
 	}
 
-	//<!--------------------- ----------------cancel pickup------------------------------ -->
-	public int cancelpickup(String username)
-			throws ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------cancel
+	// pickup------------------------------ -->
+	public int cancelpickup(String username) throws ClassNotFoundException, SQLException {
 
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(username);
 			String removepickup = "DELETE from date WHERE userid= ?";
 			preparedStatement = connection.prepareStatement(removepickup);
-			preparedStatement.setInt(1, userid );
+			preparedStatement.setInt(1, userid);
 			return preparedStatement.executeUpdate();
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			try {
 				if (null != resultSet) {
 					resultSet.close();
@@ -553,7 +578,7 @@ public class PostgressDBOperations {
 				if (null != preparedStatement) {
 					preparedStatement.close();
 				}
-				if (null != connection) { 
+				if (null != connection) {
 					connection.close();
 				}
 			} catch (SQLException sqlex) {
@@ -563,9 +588,9 @@ public class PostgressDBOperations {
 		return -1;// fail
 	}
 
-	// <!--------------------- ----------------delete order row------------------------------ -->
-	public int removeProductOrder(int parsedproductId)
-			throws ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------delete order
+	// row------------------------------ -->
+	public int removeProductOrder(int parsedproductId) throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			String updateOrders = "DELETE from orders WHERE product_id = ?";
@@ -574,8 +599,7 @@ public class PostgressDBOperations {
 			return preparedStatement.executeUpdate();
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			try {
 				if (null != resultSet) {
 					resultSet.close();
@@ -583,7 +607,7 @@ public class PostgressDBOperations {
 				if (null != preparedStatement) {
 					preparedStatement.close();
 				}
-				if (null != connection) { // 
+				if (null != connection) { //
 					connection.close();
 				}
 			} catch (SQLException sqlex) {
@@ -593,9 +617,11 @@ public class PostgressDBOperations {
 		return -1;// fail
 	}
 
-	// <!--------------------- ----------------display orders----------------------------------------- -->
+	// <!--------------------- ----------------display
+	// orders----------------------------------------- -->
 	@SuppressWarnings({ "null", "resource" })
-	public Map<Object, Map<Object, Object>> displayOrders(String sessionusername) throws ClassNotFoundException, SQLException {
+	public Map<Object, Map<Object, Object>> displayOrders(String sessionusername)
+			throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(sessionusername);
@@ -607,13 +633,13 @@ public class PostgressDBOperations {
 			Map<Object, Map<Object, Object>> entireOrder = new HashMap<Object, Map<Object, Object>>();
 			while (resultSet.next()) {
 				String categoryid = Integer.toString(resultSet.getInt(1));
-				Object objCId = categoryid ;
-				String categoryname =resultSet.getString(2);
+				Object objCId = categoryid;
+				String categoryname = resultSet.getString(2);
 				Object objname = categoryname;
 				String productId = Integer.toString(resultSet.getInt(3));
-				Object objId = productId ;
+				Object objId = productId;
 				String productName = resultSet.getString(4);
-				Object objName =  productName;
+				Object objName = productName;
 				String productDescription = resultSet.getString(5);
 				Object objDes = productDescription;
 				float productPrice = resultSet.getFloat(6);
@@ -622,13 +648,13 @@ public class PostgressDBOperations {
 				Object objQuantity = quantity;
 
 				Map<Object, Object> individualOrder = new HashMap<Object, Object>();
-				individualOrder.put("category_id", objCId );
+				individualOrder.put("category_id", objCId);
 				individualOrder.put("category_name", objname);
 				individualOrder.put("product_id", objId);
 				individualOrder.put("product_name", objName);
 				individualOrder.put("product_description", objDes);
-				individualOrder.put("product_price", objPrice );
-				individualOrder.put("quantity",objQuantity );
+				individualOrder.put("product_price", objPrice);
+				individualOrder.put("quantity", objQuantity);
 
 				entireOrder.put(productId, individualOrder);
 			}
@@ -680,7 +706,8 @@ public class PostgressDBOperations {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			String query = "select p.product_id, p.product_description, p.product_name,p.image_name, p.product_price, o.quantity "
 					+ "from orders o join product p on p.product_id = o.product_id "
-					+ "join login l on l.userid = o.userid " + "where p.category_id= ? and l.username= ? order by p.product_name asc";
+					+ "join login l on l.userid = o.userid "
+					+ "where p.category_id= ? and l.username= ? order by p.product_name asc";
 			preparedStatement = connection.prepareStatement(query);
 			preparedStatement.setInt(1, Integer.parseInt(categoryId));
 			preparedStatement.setString(2, sessionusername);
@@ -689,7 +716,7 @@ public class PostgressDBOperations {
 				String product_id = resultSet.getString(1);
 				String product_description = resultSet.getString(2);
 				String product_name = resultSet.getString(3);
-				String image_name= resultSet.getString(4);
+				String image_name = resultSet.getString(4);
 				String product_price = resultSet.getString(5);
 				String quantity = resultSet.getString(6);
 
@@ -720,7 +747,8 @@ public class PostgressDBOperations {
 			for (Map<String, Object> eacgCategoryMap : ordersCategoriesList) {
 				String categoryId = (String) eacgCategoryMap.get("categoryId");
 				String categoryName = (String) eacgCategoryMap.get("categoryName");
-				List<Map<String, Object>> allProductsBasedOnCategory = getAllOrderedProductsForEachCategory(sessionUserName, categoryId);
+				List<Map<String, Object>> allProductsBasedOnCategory = getAllOrderedProductsForEachCategory(
+						sessionUserName, categoryId);
 				Map<String, Object> eachInfoMap = new HashMap<String, Object>();
 				eachInfoMap.put("categoryId", categoryId);
 				eachInfoMap.put("category_name", categoryName);
@@ -734,33 +762,32 @@ public class PostgressDBOperations {
 		return ordersInfoBasedOnCategories;
 	}
 
-	//<!--------------------- ----------------display orders----------------------------------------- -->
+	// <!--------------------- ----------------display
+	// orders----------------------------------------- -->
 	@SuppressWarnings({ "null", "resource" })
-	public Map<Object, Map<Object, Object>> displayOrdersoncategory(String sessionusername) throws ClassNotFoundException, SQLException {
+	public Map<Object, Map<Object, Object>> displayOrdersoncategory(String sessionusername)
+			throws ClassNotFoundException, SQLException {
 
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(sessionusername);
-			System.out.println("userid is " +userid);
-			preparedStatement = connection.
-					prepareStatement("SELECT DISTINCT category_name \r\n"
-							+ "FROM category\r\n"
-							+ "WHERE category_id IN(SELECT category_id\r\n"
-							+ "FROM product\r\n"
-							+ "WHERE product_id IN (select  product_id from orders where userid=?))");
-			preparedStatement.setInt(1, userid); 
+			System.out.println("userid is " + userid);
+			preparedStatement = connection.prepareStatement("SELECT DISTINCT category_name \r\n" + "FROM category\r\n"
+					+ "WHERE category_id IN(SELECT category_id\r\n" + "FROM product\r\n"
+					+ "WHERE product_id IN (select  product_id from orders where userid=?))");
+			preparedStatement.setInt(1, userid);
 			resultSet = preparedStatement.executeQuery();
 			Map<Object, Map<Object, Object>> entireOrder = new HashMap<Object, Map<Object, Object>>();
 			while (resultSet.next()) {
 
 				String categoryid = Integer.toString(resultSet.getInt(1));
-				Object objCId = categoryid ;
-				String categoryname =resultSet.getString(2);
+				Object objCId = categoryid;
+				String categoryname = resultSet.getString(2);
 				Object objname = categoryname;
 				String productId = Integer.toString(resultSet.getInt(3));
-				Object objId = productId ;
+				Object objId = productId;
 				String productName = resultSet.getString(4);
-				Object objName =  productName;
+				Object objName = productName;
 				String productDescription = resultSet.getString(5);
 				Object objDes = productDescription;
 				float productPrice = resultSet.getFloat(6);
@@ -770,13 +797,13 @@ public class PostgressDBOperations {
 
 				Map<Object, Object> individualOrder = new HashMap<Object, Object>();
 
-				individualOrder.put("category_id", objCId );
+				individualOrder.put("category_id", objCId);
 				individualOrder.put("category_name", objname);
 				individualOrder.put("product_id", objId);
 				individualOrder.put("product_name", objName);
 				individualOrder.put("product_description", objDes);
-				individualOrder.put("product_price", objPrice );
-				individualOrder.put("quantity",objQuantity );
+				individualOrder.put("product_price", objPrice);
+				individualOrder.put("quantity", objQuantity);
 
 				entireOrder.put(productId, individualOrder);
 			}
@@ -791,7 +818,8 @@ public class PostgressDBOperations {
 		return null;
 	}
 
-	//<!--------------------- ----------------Check Existing Product Id----------------------------------------- -->
+	// <!--------------------- ----------------Check Existing Product
+	// Id----------------------------------------- -->
 	public boolean checkExistingProductid(String sessionusername, int parsedproduct_id)
 			throws ClassNotFoundException, SQLException {
 		try {
@@ -801,26 +829,28 @@ public class PostgressDBOperations {
 			preparedStatement = connection.prepareStatement(checkPID);
 			preparedStatement.setInt(1, parsedproduct_id);
 			preparedStatement.setString(2, sessionusername);
-			System.out.println("Product check with productid: "+parsedproduct_id +" exist!");
+			System.out.println("Product check with productid: " + parsedproduct_id + " exist!");
 			resultSet = preparedStatement.executeQuery();
 			while (resultSet.next()) {
 				return true;
 			}
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return false;
 	}
 
-	// <!--------------------- ----------------Increase Quantity in orders table------------------------------ -->
-	public int increaseQuantity( String sessionusername, int parsedproductId, int parsedquantity)throws ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------Increase Quantity in orders
+	// table------------------------------ -->
+	public int increaseQuantity(String sessionusername, int parsedproductId, int parsedquantity)
+			throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(sessionusername);
-			//-------------------------------------sum of quantity--------------------------------------------
+			// -------------------------------------sum of
+			// quantity--------------------------------------------
 			preparedStatement = connection.prepareStatement("select quantity from orders where product_id = ?");
 			preparedStatement.setInt(1, parsedproductId);
 			resultSet = preparedStatement.executeQuery();
@@ -841,19 +871,21 @@ public class PostgressDBOperations {
 			return preparedStatement.executeUpdate();
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return 1;
 	}
 
-	// <!--------------------- ----------------update Quantity in orders table------------------------------ -->
-	public int decreaseQuantity( String sessionusername, int parsedproductId, int parsedquantity)throws ClassNotFoundException, SQLException {
+	// <!--------------------- ----------------update Quantity in orders
+	// table------------------------------ -->
+	public int decreaseQuantity(String sessionusername, int parsedproductId, int parsedquantity)
+			throws ClassNotFoundException, SQLException {
 		try {
 			connection = JDBCPostgreSQLConnect.getConnection();
 			userid = fetchUserId(sessionusername);
-			//-------------------------------------update of quantity--------------------------------------------
+			// -------------------------------------update of
+			// quantity--------------------------------------------
 			String updateQuantity = "UPDATE orders SET quantity = ? WHERE userid = ? and product_id = ?";
 			preparedStatement = connection.prepareStatement(updateQuantity);
 			preparedStatement.setInt(1, parsedquantity);
@@ -864,8 +896,7 @@ public class PostgressDBOperations {
 			return result;
 		} catch (SQLException sqlex) {
 			sqlex.printStackTrace();
-		}
-		finally {
+		} finally {
 			closeDb();
 		}
 		return 0;
